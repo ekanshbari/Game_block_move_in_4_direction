@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+canvas {
+    border:1px solid #d3d3d3;
+    background-color: #f1f1f1;
+}
+</style>
+</head>
+<body onload="startGame()"> <!-- memanggil method startgame -->
+<script>
+
+var kotakObjek; //Pembuatan variabel yg menjadi objek permainan
+var penghalang;
+
+//method untuk memulai permainan
+function startGame() { 
+    areaPermainan.start(); //memanggil method untuk membuat canvas
+    penghalang = new component(5, 200, "aqua", 300, 120);
+    kotakObjek = new component(30, 30, "red", 10, 120); //inisialisasi pengisian nilai objek
+}
+
+//konstruktor yang berisi method area permainan
+var areaPermainan = {
+    canvas : document.createElement("canvas"),
+    start : function() {
+        this.canvas.width = 480;
+        this.canvas.height = 270;
+        this.context = this.canvas.getContext("2d");
+        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        this.interval = setInterval(updateGameArea, 20);
+        window.addEventListener('keydown', function (e) {
+            areaPermainan.keys = (areaPermainan.keys || []);
+            areaPermainan.keys[e.keyCode] = (e.type == "keydown");
+        })
+        window.addEventListener('keyup', function (e) {
+            areaPermainan.keys[e.keyCode] = (e.type == "keydown");            
+        })
+    }, 
+
+    //method untuk membuat objek tidak meninggalkan jejak pada canvas
+    clear : function(){
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    },
+
+    stop : function() {
+        clearInterval(this.interval);
+    }
+
+}
+
+//method membuat objek
+function component(width, height, color, x, y) {
+    this.gamearea = areaPermainan;
+    this.width = width;
+    this.height = height;
+    this.speedX = 0;
+    this.speedY = 0;    
+    this.x = x;
+    this.y = y;    
+    this.update = function() {
+        ctx = areaPermainan.context;
+        ctx.fillStyle = color;
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
+
+    //method untuk posisi baru objek
+    this.newPos = function() {
+        this.x += this.speedX;
+        this.y += this.speedY;        
+    }
+
+    //method untuk efek tabrakan dengan objek lain
+    this.crashWith = function (otherobj) {
+        var myleft = this.x;
+        var myright = this.x + (this.width);
+        var mytop = this.y;
+        var mybottom = this.y + (this.height);
+        var otherleft = otherobj.x;
+        var otherright = otherobj.x + (otherobj.width);
+        var othertop = otherobj.y;
+        var otherbottom = otherobj.y + (otherobj.height);
+        var crash = true;
+        if((mybottom < othertop) || (mytop > otherbottom) || (myright < otherleft) ||
+        (myleft > otherright)) {
+            crash = false;
+        }
+        return crash;
+    }    
+}
+
+//method untuk membuat frame agar terlihat seperti gambar bergerak
+function updateGameArea() {
+    if (kotakObjek.crashWith(penghalang)) {
+        areaPermainan.stop();
+    } else {
+        areaPermainan.clear();
+        penghalang.update();
+        kotakObjek.x += kotakObjek.speedX;
+        kotakObjek.y += kotakObjek.speedY;    
+        kotakObjek.update();
+    }
+}
+
+function moveup() {
+    kotakObjek.speedY = -1; 
+}
+
+function movedown() {
+    kotakObjek.speedY = 1; 
+}
+
+function moveleft() {
+    kotakObjek.speedX = -1; 
+}
+
+function moveright() {
+    kotakObjek.speedX = 1; 
+}
+
+function clearmove() {
+    kotakObjek.speedX = 0; 
+    kotakObjek.speedY = 0; 
+}
+</script>
+<div style="text-align:center;width:480px;">
+  <button onmousedown="moveup()" onmouseup="clearmove()" ontouchstart="moveup()">UP</button><br><br>
+  <button onmousedown="moveleft()" onmouseup="clearmove()" ontouchstart="moveleft()">LEFT</button>
+  <button onmousedown="moveright()" onmouseup="clearmove()" ontouchstart="moveright()">RIGHT</button><br><br>
+  <button onmousedown="movedown()" onmouseup="clearmove()" ontouchstart="movedown()">DOWN</button>
+</div>
+<p>Try hitting the obstacle, and the game will stop.</p>
+</body>
+</html>
